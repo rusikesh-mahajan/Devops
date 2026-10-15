@@ -1,0 +1,133 @@
+pipeline {
+    agent any
+
+    parameters {
+        choice(name: 'DEPLOY_ENV', choices: ['local', 'staging', 'production'], description: 'Target Deployment Environment')
+        string(name: 'APP_PORT', defaultValue: '8080', description: 'Application HTTP Port')
+        booleanParam(name: 'RUN_UI_TESTS', defaultValue: true, description: 'Execute Headless Selenium UI Journey Tests')
+    }
+
+    environment {
+        DOCKER_IMAGE = "visitor-gate-pass"
+        DOCKER_REGISTRY = "local"
+        DOCKER_TAG = "${BUILD_NUMBER}"
+        SPRING_PROFILES_ACTIVE = "prod"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo "Checking out source code for environment: ${params.DEPLOY_ENV}..."
+                checkout scm
+            }
+        }
+
+        stage('Dependency & Syntax Validation') {
+            steps {
+                echo "Validating Maven dependencies and project configuration..."
+                bat 'mvn dependency:resolve-plugins -B'
+            }
+        }
+        
+        stage('Compile & Static Analysis') {
+            steps {
+                echo "Compiling application source code..."
+                bat 'mvn clean compile'
+            }
+        }
+
+        stage('Unit & Integration Tests') {
+            steps {
+                echo "Executing automated unit tests and repository tests..."
+                // Strict Quality Gate: Unit test failures will terminate the pipeline
+                bat 'mvn test -Dtest=VisitorPassRepositoryTest,WebControllerTest'
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true, testResults: 'target/surefire-reports/TEST-com.gatepass.repository.*.xml,target/surefire-reports/TEST-com.gatepass.controller.*.xml'
+                }
+            }
+        }
+
+        stage('Selenium UI Tests') {
+            when {
+                expression { return params.RUN_UI_TESTS == true }
+            }
+            steps {
+                echo "Running Selenium Headless Chrome User Journeys..."
+                bat 'mvn test -Dtest=GatePassUITest'
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'screenshots/*.png', allowEmptyArchive: true
+                    junit allowEmptyResults: true, testResults: 'target/surefire-reports/TEST-com.gatepass.GatePassUITest.xml'
+                }
+            }
+        }
+
+        stage('Package Artifact') {
+            steps {
+                echo "Packaging production JAR artifact..."
+                bat 'mvn package -DskipTests'
+            }
+            post {
+                success {
+                    archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+                }
+            }
+        }
+
+        stage('Docker Build & Tag') {
+            steps {
+                echo "Building versioned Docker image: ${DOCKER_IMAGE}:${DOCKER_TAG}..."
+                bat "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} -t ${DOCKER_IMAGE}:latest ."
+            }
+        }
+
+        stage('Deploy Application') {
+            steps {
+                echo "Deploying application containers via Docker Compose..."
+                bat 'docker compose -p visitor-gate-pass down'
+                bat 'docker compose -p visitor-gate-pass up -d --build'
+            }
+        }
+        
+        stage('Health Verification') {
+            steps {
+                echo "Verifying application health via Actuator endpoint..."
+                script {
+                    def isHealthy = false
+                    // Allow up to 60 seconds (12 attempts x 5s) for DB and App to be fully operational
+                    for (int attempt = 1; attempt <= 12; attempt++) {
+                        try {
+                            echo "Health check attempt ${attempt}/12..."
+                            bat "curl.exe -f -s http://localhost:${params.APP_PORT}/actuator/health"
+                            isHealthy = true
+                            echo "Application is HEALTHY and responding on port ${params.APP_PORT}!"
+                            break
+                        } catch (Exception err) {
+                            echo "Application not ready yet. Waiting 5s..."
+                            sleep 5
+                        }
+                    }
+                    if (!isHealthy) {
+                        error("Deployment Verification FAILED: Application did not become healthy within timeout.")
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "CI/CD Pipeline run completed."
+            junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
+        }
+        success {
+            echo "Pipeline SUCCESS: Build #${BUILD_NUMBER} deployed and verified in ${params.DEPLOY_ENV}."
+        }
+        failure {
+            echo "Pipeline FAILURE: One or more stages failed. Deployment halted."
+        }
+    }
+}

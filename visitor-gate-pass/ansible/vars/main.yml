@@ -1,0 +1,21 @@
+---
+# Configuration Variables for Visitor Gate Pass System Provisioning
+app_name: "visitor-gate-pass"
+app_version: "1.0.0"
+app_port: 8080
+db_port: 3307
+deploy_dir: "/opt/visitor-gate-pass"
+config_dir: "/opt/visitor-gate-pass/config"
+
+# Database Settings
+db_name: "gatepass_db"
+db_user: "root"
+db_password: "rootpassword"
+db_root_password: "rootpassword"
+
+# Docker Settings
+docker_image: "visitor-gate-pass:1.0.0"
+docker_compose_file: "../docker-compose.yml"
+healthcheck_url: "http://localhost:8080/actuator/health"
+healthcheck_retries: 10
+healthcheck_delay: 5

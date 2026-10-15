@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Automated Residential Visitor Gate-Pass System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --surface-color: #1e293b;
+            --glass-bg: rgba(30, 41, 59, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --primary-color: #38bdf8;
+            --primary-glow: rgba(56, 189, 248, 0.35);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+        }
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(56, 189, 248, 0.07), transparent 30%),
+                radial-gradient(circle at 85% 80%, rgba(168, 85, 247, 0.07), transparent 30%);
+            background-attachment: fixed;
+            font-family: 'Outfit', sans-serif;
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        
+        .glass-nav {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 14px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .navbar-brand {
+            font-weight: 700;
+            background: linear-gradient(135deg, #38bdf8, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 1.45rem;
+            letter-spacing: -0.5px;
+        }
+        .user-badge {
+            background: rgba(56, 189, 248, 0.1);
+            color: #7dd3fc;
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-right: 16px;
+        }
+        .btn-logout {
+            background: rgba(239, 68, 68, 0.12);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 8px;
+            padding: 6px 16px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.25s;
+        }
+        .btn-logout:hover {
+            background: rgba(239, 68, 68, 0.25);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        .main-container {
+            padding: 30px 20px 60px;
+            max-width: 1240px;
+            margin: 0 auto;
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+            padding: 24px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.4);
+        }
+
+        .panel-title {
+            font-weight: 600;
+            font-size: 1.25rem;
+            margin-bottom: 20px;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .stat-card {
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.95));
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.25s, box-shadow 0.25s;
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 25px -8px rgba(0,0,0,0.5);
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 3px;
+        }
+        .stat-primary::before { background: var(--primary-color); }
+        .stat-warning::before { background: var(--warning); }
+        .stat-success::before { background: var(--success); }
+        .stat-info::before { background: var(--info); }
+        .stat-danger::before { background: var(--danger); }
+        
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin: 6px 0 0;
+            color: var(--text-main);
+        }
+        .stat-label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .form-control, .form-select {
+            background: rgba(15, 23, 42, 0.65);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            border-radius: 10px;
+            padding: 10px 14px;
+            transition: all 0.25s ease;
+        }
+        .form-control:focus, .form-select:focus {
+            background: rgba(15, 23, 42, 0.95);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+            color: white;
+        }
+        .form-select option {
+            background: var(--surface-color);
+            color: var(--text-main);
+        }
+        .form-label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            border: none;
+            color: #0f172a;
+            font-weight: 600;
+            border-radius: 10px;
+            padding: 10px 22px;
+            transition: all 0.25s;
+            box-shadow: 0 4px 14px 0 var(--primary-glow);
+        }
+        .btn-primary:hover {
+            background: #7dd3fc;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px 0 var(--primary-glow);
+            color: #0f172a;
+        }
+
+        .filter-pills {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+        .filter-pill {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            text-decoration: none;
+            color: var(--text-muted);
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid var(--glass-border);
+            transition: all 0.2s;
+        }
+        .filter-pill:hover, .filter-pill.active {
+            color: #fff;
+            background: rgba(56, 189, 248, 0.2);
+            border-color: rgba(56, 189, 248, 0.5);
+        }
+
+        .table-responsive {
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+        }
+        .table {
+            margin-bottom: 0;
+            color: var(--text-main);
+            vertical-align: middle;
+        }
+        .table thead th {
+            background: rgba(15, 23, 42, 0.9);
+            border-bottom: 1px solid var(--glass-border);
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 14px 16px;
+            border-top: none;
+        }
+        .table tbody tr {
+            border-bottom: 1px solid var(--glass-border);
+            transition: background 0.2s;
+        }
+        .table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.035);
+        }
+        .table tbody td {
+            padding: 14px 16px;
+            border: none;
+            background: transparent;
+            font-size: 0.92rem;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.76rem;
+            letter-spacing: 0.4px;
+        }
+        .bg-warning { background: rgba(245, 158, 11, 0.18) !important; color: #fcd34d !important; border: 1px solid rgba(245, 158, 11, 0.4); }
+        .bg-info { background: rgba(59, 130, 246, 0.18) !important; color: #93c5fd !important; border: 1px solid rgba(59, 130, 246, 0.4); }
+        .bg-success { background: rgba(16, 185, 129, 0.18) !important; color: #6ee7b7 !important; border: 1px solid rgba(16, 185, 129, 0.4); }
+        .bg-danger { background: rgba(239, 68, 68, 0.18) !important; color: #fca5a5 !important; border: 1px solid rgba(239, 68, 68, 0.4); }
+        .bg-secondary { background: rgba(148, 163, 184, 0.18) !important; color: #cbd5e1 !important; border: 1px solid rgba(148, 163, 184, 0.4); }
+
+        .btn-action {
+            padding: 5px 11px;
+            border-radius: 7px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            border: none;
+            transition: all 0.2s;
+            margin: 2px;
+        }
+        .btn-action:hover { transform: translateY(-1px); }
+        .btn-action.approve { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4); }
+        .btn-action.approve:hover { background: rgba(16, 185, 129, 0.35); color: #fff; }
+        
+        .btn-action.reject { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.4); }
+        .btn-action.reject:hover { background: rgba(239, 68, 68, 0.35); color: #fff; }
+        
+        .btn-action.checkin { background: rgba(56, 189, 248, 0.2); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.4); }
+        .btn-action.checkin:hover { background: rgba(56, 189, 248, 0.35); color: #fff; }
+        
+        .btn-action.checkout { background: rgba(168, 85, 247, 0.2); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.4); }
+        .btn-action.checkout:hover { background: rgba(168, 85, 247, 0.35); color: #fff; }
+
+        .btn-action.details { background: rgba(255, 255, 255, 0.08); color: #e2e8f0; border: 1px solid var(--glass-border); }
+        .btn-action.details:hover { background: rgba(255, 255, 255, 0.16); color: #fff; }
+
+        .btn-action.edit-btn { background: rgba(245, 158, 11, 0.18); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.4); }
+        .btn-action.edit-btn:hover { background: rgba(245, 158, 11, 0.35); color: #fff; }
+
+        .modal-content {
+            background: #1e293b;
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+            color: var(--text-main);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+        }
+        .modal-header {
+            border-bottom: 1px solid var(--glass-border);
+            padding: 18px 24px;
+        }
+        .modal-footer {
+            border-top: 1px solid var(--glass-border);
+            padding: 16px 24px;
+        }
+        .btn-close { filter: invert(1); }
+
+        .pass-code-pill {
+            font-family: monospace;
+            font-size: 0.85rem;
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+            padding: 2px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            display: inline-block;
+        }
+
+        .alert {
+            border-radius: 12px;
+            border: none;
+            font-weight: 500;
+        }
+        .alert-success { background: rgba(34, 197, 94, 0.15); color: #86efac; border: 1px solid rgba(34, 197, 94, 0.3); }
+        .alert-danger { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+<nav class="glass-nav">
+    <div class="container-fluid d-flex justify-content-between align-items-center px-4">
+        <a class="navbar-brand text-decoration-none" th:href="@{/dashboard}">
+            <i class="bi bi-shield-check me-2"></i>GatePass
+        </a>
+        <div class="d-flex align-items-center">
+            <span class="user-badge" id="user-info-text">
+                <i class="bi bi-person-fill me-1"></i>[[${username}]] 
+                <span class="badge ms-1" th:classappend="${role == 'ROLE_ADMIN' ? 'bg-danger' : (role == 'ROLE_GUARD' ? 'bg-primary' : 'bg-info')}">
+                    [[${role.replace('ROLE_', '')}]]
+                </span>
+            </span>
+            <form th:action="@{/logout}" method="post" class="m-0">
+                <button type="submit" class="btn-logout" id="logout-btn">
+                    <i class="bi bi-box-arrow-right me-1"></i>Logout
+                </button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<div class="main-container">
+
+    <!-- Flash Alerts -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show mb-4" role="alert" id="success-alert">
+        <i class="bi bi-check-circle-fill me-2"></i>[[${successMessage}]]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show mb-4" role="alert" id="error-alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>[[${errorMessage}]]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <!-- METRICS DASHBOARD -->
+    <div class="mb-4" id="stats-section">
+        <div class="row g-3">
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="stat-card stat-primary">
+                    <div class="stat-label">Total Passes</div>
+                    <div class="stat-value" id="stat-total">[[${totalPasses}]]</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="stat-card stat-warning">
+                    <div class="stat-label">Pending</div>
+                    <div class="stat-value" id="stat-pending">[[${pendingPasses}]]</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="stat-card stat-info">
+                    <div class="stat-label">Approved</div>
+                    <div class="stat-value" id="stat-approved">[[${approvedPasses}]]</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="stat-card stat-success">
+                    <div class="stat-label">Inside (Active)</div>
+                    <div class="stat-value" id="stat-checkedin">[[${checkedInPasses}]]</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="stat-card stat-primary">
+                    <div class="stat-label">Checked Out</div>
+                    <div class="stat-value" id="stat-checkedout">[[${checkedOutPasses}]]</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="stat-card stat-danger">
+                    <div class="stat-label">Rejected</div>
+                    <div class="stat-value" id="stat-rejected">[[${rejectedPasses}]]</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RESIDENT PRE-REGISTRATION PANEL -->
+    <div th:if="${role == 'ROLE_RESIDENT'}" class="glass-panel" id="resident-preregister-view">
+        <div class="panel-title">
+            <span><i class="bi bi-person-plus-fill me-2 text-info"></i>Pre-Register Guest / Expected Visitor</span>
+        </div>
+        <form th:action="@{/resident/pre-register}" method="post" id="resident-create-pass-form">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Visitor Full Name</label>
+                    <input type="text" class="form-control" name="visitorName" placeholder="e.g. Alice Walker" required minlength="2" id="resVisitorName">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Contact Phone</label>
+                    <input type="tel" class="form-control" name="phone" placeholder="e.g. +1 555-0199" required id="resPhone">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Vehicle Number (Optional)</label>
+                    <input type="text" class="form-control" name="vehicleNo" placeholder="e.g. MH12AB1234" id="resVehicleNo">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Purpose of Visit</label>
+                    <input type="text" class="form-control" name="purpose" placeholder="e.g. Family Gathering" required id="resPurpose">
+                </div>
+            </div>
+            <div class="mt-3 text-end">
+                <button type="submit" class="btn btn-primary" id="res-submit-pass-btn">
+                    <i class="bi bi-shield-plus me-1"></i>Generate Pre-Approved Pass
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- GUARD PASS CREATION PANEL -->
+    <div th:if="${role == 'ROLE_GUARD' || role == 'ROLE_ADMIN'}" class="glass-panel" id="guard-view">
+        <div class="panel-title">
+            <span><i class="bi bi-shield-lock-fill me-2 text-primary"></i>Register New Visitor at Gate</span>
+        </div>
+        <form th:action="@{/guard/create-pass}" method="post" id="create-pass-form">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Visitor Full Name</label>
+                    <input type="text" class="form-control" name="visitorName" placeholder="Visitor Name" required minlength="2" id="visitorName">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Contact Phone</label>
+                    <input type="tel" class="form-control" name="phone" placeholder="Phone Number" required id="phone">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Vehicle Number</label>
+                    <input type="text" class="form-control" name="vehicleNo" placeholder="Optional" id="vehicleNo">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Resident Host</label>
+                    <select class="form-select" name="hostId" required id="hostId">
+                        <option value="">Select Resident Host...</option>
+                        <option th:each="res : ${residents}" th:value="${res.id}" th:text="${res.name + ' (' + res.username + ')'}"></option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Purpose of Visit</label>
+                    <input type="text" class="form-control" name="purpose" placeholder="e.g. Delivery, Maintenance, Guest" required id="purpose">
+                </div>
+            </div>
+            <div class="mt-3 text-end">
+                <button type="submit" class="btn btn-primary" id="submit-pass-btn">
+                    <i class="bi bi-pass-fill me-1"></i>Generate Gate-Pass
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- VISITOR RECORDS & SEARCH PANEL -->
+    <div class="glass-panel">
+        <div class="panel-title">
+            <span><i class="bi bi-list-task me-2"></i>Visitor Records & Gate Passes</span>
+            <span class="fs-6 text-muted" th:text="${passes != null ? passes.size() + ' records' : '0 records'}"></span>
+        </div>
+
+        <div class="row mb-3 align-items-center">
+            <div class="col-lg-6 mb-2 mb-lg-0">
+                <form th:action="@{/dashboard}" method="get" class="d-flex gap-2" id="search-form">
+                    <input class="form-control" type="search" name="query" th:value="${searchQuery}" 
+                           placeholder="Search by name, pass code, vehicle, purpose..." id="search-input">
+                    <button class="btn btn-primary" type="submit" id="search-btn">
+                        <i class="bi bi-search"></i>
+                    </button>
+                    <a th:href="@{/dashboard}" class="btn btn-action details d-flex align-items-center" th:if="${searchQuery != null}">Clear</a>
+                </form>
+            </div>
+            <div class="col-lg-6">
+                <div class="filter-pills justify-content-lg-end">
+                    <a th:href="@{/dashboard}" class="filter-pill" th:classappend="${statusFilter == null or statusFilter == 'ALL' ? 'active' : ''}">All</a>
+                    <a th:href="@{/dashboard(statusFilter='PENDING')}" class="filter-pill" th:classappend="${statusFilter == 'PENDING' ? 'active' : ''}">Pending</a>
+                    <a th:href="@{/dashboard(statusFilter='APPROVED')}" class="filter-pill" th:classappend="${statusFilter == 'APPROVED' ? 'active' : ''}">Approved</a>
+                    <a th:href="@{/dashboard(statusFilter='CHECKED_IN')}" class="filter-pill" th:classappend="${statusFilter == 'CHECKED_IN' ? 'active' : ''}">Checked-In</a>
+                    <a th:href="@{/dashboard(statusFilter='CHECKED_OUT')}" class="filter-pill" th:classappend="${statusFilter == 'CHECKED_OUT' ? 'active' : ''}">Checked-Out</a>
+                    <a th:href="@{/dashboard(statusFilter='REJECTED')}" class="filter-pill" th:classappend="${statusFilter == 'REJECTED' ? 'active' : ''}">Rejected</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="table-responsive" th:if="${passes != null and !passes.isEmpty()}">
+            <table class="table" id="records-table">
+                <thead>
+                    <tr>
+                        <th>Pass Code</th>
+                        <th>Visitor Details</th>
+                        <th>Contact / Vehicle</th>
+                        <th>Resident Host</th>
+                        <th>Timestamps</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="pass : ${passes}" th:id="${'pass-row-' + pass.id}">
+                        <td>
+                            <span class="pass-code-pill" th:text="${pass.passCode != null ? pass.passCode : '#' + pass.id}">GP-0001</span>
+                        </td>
+                        <td>
+                            <div class="fw-bold" th:text="${pass.visitorName}">Name</div>
+                            <div class="small text-muted" th:text="${pass.purpose}">Purpose</div>
+                        </td>
+                        <td>
+                            <div><i class="bi bi-telephone-fill small text-muted me-1"></i><span th:text="${pass.phone}">123456</span></div>
+                            <div class="small text-muted" th:if="${pass.vehicleNo != null and !pass.vehicleNo.isEmpty()}">
+                                <i class="bi bi-car-front-fill me-1"></i><span th:text="${pass.vehicleNo}">MH12-3456</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="fw-semibold" th:text="${pass.host.name}">Host</div>
+                            <div class="small text-muted" th:text="${pass.host.username}">host_user</div>
+                        </td>
+                        <td class="small text-muted">
+                            <div th:if="${pass.createdAt != null}">Created: <span th:text="${#temporals.format(pass.createdAt, 'dd MMM HH:mm')}">Date</span></div>
+                            <div th:if="${pass.checkInTime != null}" class="text-info">In: <span th:text="${#temporals.format(pass.checkInTime, 'dd MMM HH:mm')}">Time</span></div>
+                            <div th:if="${pass.checkOutTime != null}" class="text-secondary">Out: <span th:text="${#temporals.format(pass.checkOutTime, 'dd MMM HH:mm')}">Time</span></div>
+                        </td>
+                        <td>
+                            <span class="badge" 
+                                  th:classappend="${pass.status == 'PENDING' ? 'bg-warning' : (pass.status == 'APPROVED' ? 'bg-info' : (pass.status == 'CHECKED_IN' ? 'bg-success' : (pass.status == 'REJECTED' ? 'bg-danger' : 'bg-secondary')))}"
+                                  th:text="${pass.status}" th:id="${'status-badge-' + pass.id}">STATUS</span>
+                        </td>
+                        <td>
+                            <!-- Resident Workflow Actions -->
+                            <div th:if="${role == 'ROLE_RESIDENT' && pass.status == 'PENDING'}" class="d-inline">
+                                <form th:action="@{/resident/update-status/{id}(id=${pass.id})}" method="post" class="d-inline">
+                                    <input type="hidden" name="status" value="APPROVED">
+                                    <button type="submit" class="btn-action approve" title="Approve Visitor">
+                                        <i class="bi bi-check-lg"></i> Approve
+                                    </button>
+                                </form>
+                                <form th:action="@{/resident/update-status/{id}(id=${pass.id})}" method="post" class="d-inline">
+                                    <input type="hidden" name="status" value="REJECTED">
+                                    <button type="submit" class="btn-action reject" title="Reject Visitor">
+                                        <i class="bi bi-x-lg"></i> Reject
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- Guard Workflow Actions -->
+                            <div th:if="${(role == 'ROLE_GUARD' || role == 'ROLE_ADMIN') && pass.status == 'APPROVED'}" class="d-inline">
+                                <form th:action="@{/guard/update-status/{id}(id=${pass.id})}" method="post" class="d-inline">
+                                    <input type="hidden" name="status" value="CHECKED_IN">
+                                    <button type="submit" class="btn-action checkin" title="Check In">
+                                        <i class="bi bi-box-arrow-in-right"></i> Check-In
+                                    </button>
+                                </form>
+                            </div>
+                            <div th:if="${(role == 'ROLE_GUARD' || role == 'ROLE_ADMIN') && pass.status == 'CHECKED_IN'}" class="d-inline">
+                                <form th:action="@{/guard/update-status/{id}(id=${pass.id})}" method="post" class="d-inline">
+                                    <input type="hidden" name="status" value="CHECKED_OUT">
+                                    <button type="submit" class="btn-action checkout" title="Check Out">
+                                        <i class="bi bi-box-arrow-right"></i> Check-Out
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- Edit Action -->
+                            <button th:if="${(role == 'ROLE_GUARD' || role == 'ROLE_ADMIN') && pass.canEdit()}"
+                                    type="button" class="btn-action edit-btn"
+                                    th:attr="data-id=${pass.id},data-name=${pass.visitorName},data-phone=${pass.phone},data-purpose=${pass.purpose},data-vehicle=${pass.vehicleNo}"
+                                    onclick="openEditModal(this)">
+                                <i class="bi bi-pencil-square"></i>
+                            </button>
+
+                            <!-- Details Modal Trigger -->
+                            <button type="button" class="btn-action details" 
+                                    th:attr="data-id=${pass.id}" 
+                                    onclick="viewPassDetails(this.getAttribute('data-id'))" title="View Full Pass Details">
+                                <i class="bi bi-eye"></i> Details
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div th:if="${passes == null or passes.isEmpty()}" class="empty-state">
+            <i class="bi bi-inbox fs-1 d-block mb-2 text-muted"></i>
+            <p class="mb-0">No visitor records found matching criteria.</p>
+        </div>
+    </div>
+</div>
+
+<!-- PASS DETAILS MODAL -->
+<div class="modal fade" id="passDetailsModal" tabindex="-1" aria-labelledby="passDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="passDetailsModalLabel">
+                    <i class="bi bi-pass me-2 text-primary"></i>Visitor Gate-Pass Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <span class="pass-code-pill fs-5 px-3 py-1" id="modalPassCode">GP-XXXX</span>
+                    <div class="mt-2"><span class="badge" id="modalStatus">STATUS</span></div>
+                </div>
+                <ul class="list-group list-group-flush bg-transparent">
+                    <li class="list-group-item bg-transparent text-light d-flex justify-content-between">
+                        <span class="text-muted">Visitor Name:</span>
+                        <strong id="modalVisitorName">-</strong>
+                    </li>
+                    <li class="list-group-item bg-transparent text-light d-flex justify-content-between">
+                        <span class="text-muted">Contact Phone:</span>
+                        <span id="modalPhone">-</span>
+                    </li>
+                    <li class="list-group-item bg-transparent text-light d-flex justify-content-between">
+                        <span class="text-muted">Vehicle Number:</span>
+                        <span id="modalVehicle">-</span>
+                    </li>
+                    <li class="list-group-item bg-transparent text-light d-flex justify-content-between">
+                        <span class="text-muted">Resident Host:</span>
+                        <span id="modalHost">-</span>
+                    </li>
+                    <li class="list-group-item bg-transparent text-light d-flex justify-content-between">
+                        <span class="text-muted">Purpose:</span>
+                        <span id="modalPurpose">-</span>
+                    </li>
+                    <li class="list-group-item bg-transparent text-light d-flex justify-content-between">
+                        <span class="text-muted">Created Timestamp:</span>
+                        <span id="modalCreatedAt">-</span>
+                    </li>
+                    <li class="list-group-item bg-transparent text-light d-flex justify-content-between">
+                        <span class="text-muted">Entry (Check-In):</span>
+                        <span id="modalCheckInTime" class="text-info">-</span>
+                    </li>
+                    <li class="list-group-item bg-transparent text-light d-flex justify-content-between">
+                        <span class="text-muted">Exit (Check-Out):</span>
+                        <span id="modalCheckOutTime" class="text-secondary">-</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- EDIT PASS MODAL -->
+<div class="modal fade" id="editPassModal" tabindex="-1" aria-labelledby="editPassModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="editPassForm" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editPassModalLabel">
+                        <i class="bi bi-pencil-square me-2 text-warning"></i>Edit Visitor Details
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Visitor Name</label>
+                        <input type="text" class="form-control" name="visitorName" id="editVisitorName" required minlength="2">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phone Number</label>
+                        <input type="tel" class="form-control" name="phone" id="editPhone" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Vehicle Number</label>
+                        <input type="text" class="form-control" name="vehicleNo" id="editVehicle">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Purpose</label>
+                        <input type="text" class="form-control" name="purpose" id="editPurpose" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function viewPassDetails(id) {
+        fetch('/api/passes/' + id)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('modalPassCode').innerText = data.passCode || ('#' + data.id);
+                document.getElementById('modalVisitorName').innerText = data.visitorName;
+                document.getElementById('modalPhone').innerText = data.phone;
+                document.getElementById('modalVehicle').innerText = data.vehicleNo || 'N/A';
+                document.getElementById('modalHost').innerText = data.hostName;
+                document.getElementById('modalPurpose').innerText = data.purpose;
+                document.getElementById('modalCreatedAt').innerText = data.createdAt;
+                document.getElementById('modalCheckInTime').innerText = data.checkInTime;
+                document.getElementById('modalCheckOutTime').innerText = data.checkOutTime;
+                
+                const statusBadge = document.getElementById('modalStatus');
+                statusBadge.innerText = data.status;
+                statusBadge.className = 'badge ' + 
+                    (data.status === 'PENDING' ? 'bg-warning' : 
+                    (data.status === 'APPROVED' ? 'bg-info' : 
+                    (data.status === 'CHECKED_IN' ? 'bg-success' : 
+                    (data.status === 'REJECTED' ? 'bg-danger' : 'bg-secondary'))));
+
+                new bootstrap.Modal(document.getElementById('passDetailsModal')).show();
+            })
+            .catch(err => {
+                console.error("Error fetching pass details:", err);
+            });
+    }
+
+    function openEditModal(btn) {
+        const id = btn.getAttribute('data-id');
+        document.getElementById('editPassForm').action = '/pass/edit/' + id;
+        document.getElementById('editVisitorName').value = btn.getAttribute('data-name');
+        document.getElementById('editPhone').value = btn.getAttribute('data-phone');
+        document.getElementById('editVehicle').value = btn.getAttribute('data-vehicle') || '';
+        document.getElementById('editPurpose').value = btn.getAttribute('data-purpose');
+        new bootstrap.Modal(document.getElementById('editPassModal')).show();
+    }
+</script>
+
+</body>
+</html>

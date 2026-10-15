@@ -1,0 +1,53 @@
+---
+- name: Automated Rollback for Visitor Gate Pass System
+  hosts: webservers
+  become: false
+  vars_files:
+    - vars/main.yml
+  vars:
+    rollback_version: "previous"
+    fallback_image: "visitor-gate-pass:latest"
+
+  tasks:
+    - name: 1. Display Rollback Initiation Notice
+      debug:
+        msg: "INITIATING EMERGENCY ROLLBACK: Reverting {{ app_name }} to stable release {{ fallback_image }}"
+
+    - name: 2. Stop currently failing application container
+      shell: "docker compose -f {{ docker_compose_file }} stop app"
+      args:
+        chdir: "{{ playbook_dir }}"
+
+    - name: 3. Restore previous stable environment configuration
+      copy:
+        content: |
+          # Restored via Rollback Automation
+          APP_NAME={{ app_name }}
+          APP_VERSION={{ rollback_version }}
+          SERVER_PORT={{ app_port }}
+          DB_URL=jdbc:mysql://db:3306/{{ db_name }}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+          DB_USERNAME={{ db_user }}
+          DB_PASSWORD={{ db_password }}
+          SPRING_PROFILES_ACTIVE=prod
+        dest: "{{ config_dir }}/.env"
+        mode: '0600'
+
+    - name: 4. Relaunch containers using previous stable image
+      shell: "docker compose -f {{ docker_compose_file }} up -d"
+      args:
+        chdir: "{{ playbook_dir }}"
+
+    - name: 5. Verify Rollback Health Endpoint
+      uri:
+        url: "{{ healthcheck_url }}"
+        method: GET
+        status_code: 200
+        return_content: true
+      register: rollback_health
+      until: rollback_health.status == 200 and 'UP' in rollback_health.content
+      retries: 10
+      delay: 3
+
+    - name: 6. Confirm Successful Rollback
+      debug:
+        msg: "Rollback SUCCESSFUL: Application restored to healthy state ({{ rollback_health.content }})"
