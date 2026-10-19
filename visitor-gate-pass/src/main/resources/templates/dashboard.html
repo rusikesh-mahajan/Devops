@@ -146,28 +146,44 @@
         }
 
         .form-control, .form-select {
-            background: rgba(15, 23, 42, 0.65);
-            border: 1px solid var(--glass-border);
-            color: var(--text-main);
+            background: rgba(30, 41, 59, 0.85);
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            color: #ffffff;
             border-radius: 10px;
             padding: 10px 14px;
             transition: all 0.25s ease;
         }
+        .form-control::placeholder,
+        input::placeholder,
+        textarea::placeholder {
+            color: #94a3b8 !important;
+            opacity: 1 !important;
+            font-weight: 400;
+        }
         .form-control:focus, .form-select:focus {
-            background: rgba(15, 23, 42, 0.95);
+            background: rgba(30, 41, 59, 0.98);
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
-            color: white;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
+            color: #ffffff;
+        }
+        .form-control:focus::placeholder {
+            color: #cbd5e1 !important;
+        }
+        .form-select {
+            color: #f8fafc;
         }
         .form-select option {
-            background: var(--surface-color);
-            color: var(--text-main);
+            background: #1e293b;
+            color: #f8fafc;
         }
         .form-label {
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: var(--text-muted);
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #cbd5e1;
             margin-bottom: 6px;
+        }
+        .text-muted, .table .text-muted {
+            color: #94a3b8 !important;
         }
 
         .btn-primary {
@@ -216,6 +232,8 @@
             border: 1px solid var(--glass-border);
         }
         .table {
+            --bs-table-color: #f8fafc;
+            --bs-table-bg: transparent;
             margin-bottom: 0;
             color: var(--text-main);
             vertical-align: middle;
@@ -223,7 +241,7 @@
         .table thead th {
             background: rgba(15, 23, 42, 0.9);
             border-bottom: 1px solid var(--glass-border);
-            color: var(--text-muted);
+            color: #94a3b8 !important;
             font-weight: 600;
             font-size: 0.82rem;
             text-transform: uppercase;
@@ -236,13 +254,22 @@
             transition: background 0.2s;
         }
         .table tbody tr:hover {
-            background: rgba(255, 255, 255, 0.035);
+            background: rgba(255, 255, 255, 0.05);
         }
         .table tbody td {
             padding: 14px 16px;
             border: none;
             background: transparent;
             font-size: 0.92rem;
+            color: #f8fafc !important;
+        }
+        .table tbody td .fw-bold,
+        .table tbody td .fw-semibold {
+            color: #ffffff !important;
+        }
+        .table tbody td .text-muted,
+        .table tbody td .small.text-muted {
+            color: #94a3b8 !important;
         }
 
         .badge {
