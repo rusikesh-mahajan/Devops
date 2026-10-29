@@ -436,33 +436,93 @@
     <!-- RESIDENT PRE-REGISTRATION PANEL -->
     <div th:if="${role == 'ROLE_RESIDENT'}" class="glass-panel" id="resident-preregister-view">
         <div class="panel-title">
-            <span><i class="bi bi-person-plus-fill me-2 text-info"></i>Pre-Register Guest / Expected Visitor</span>
+            <span><i class="bi bi-person-plus-fill me-2 text-info"></i>Pre-Register Guest or Group for Flat <span class="badge bg-primary ms-1" th:text="${currentUser != null ? currentUser.unitNumber : 'My Flat'}">B-204</span></span>
         </div>
-        <form th:action="@{/resident/pre-register}" method="post" id="resident-create-pass-form">
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <label class="form-label">Visitor Full Name</label>
-                    <input type="text" class="form-control" name="visitorName" placeholder="e.g. Alice Walker" required minlength="2" id="resVisitorName">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Contact Phone</label>
-                    <input type="tel" class="form-control" name="phone" placeholder="e.g. +1 555-0199" required id="resPhone">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Vehicle Number (Optional)</label>
-                    <input type="text" class="form-control" name="vehicleNo" placeholder="e.g. MH12AB1234" id="resVehicleNo">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Purpose of Visit</label>
-                    <input type="text" class="form-control" name="purpose" placeholder="e.g. Family Gathering" required id="resPurpose">
-                </div>
-            </div>
-            <div class="mt-3 text-end">
-                <button type="submit" class="btn btn-primary" id="res-submit-pass-btn">
-                    <i class="bi bi-shield-plus me-1"></i>Generate Pre-Approved Pass
+
+        <ul class="nav nav-pills mb-3" id="resPills" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active btn-sm" id="res-single-tab" data-bs-toggle="pill" data-bs-target="#res-single-pane" type="button">
+                    <i class="bi bi-person-fill me-1"></i>Individual Visitor
                 </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link btn-sm" id="res-group-tab" data-bs-toggle="pill" data-bs-target="#res-group-pane" type="button">
+                    <i class="bi bi-people-fill me-1"></i>Group Arrival (Multiple Guests)
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="resPillsContent">
+            <!-- Individual Pre-registration -->
+            <div class="tab-pane fade show active" id="res-single-pane" role="tabpanel">
+                <form th:action="@{/resident/pre-register}" method="post" id="resident-create-pass-form">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Visitor Full Name</label>
+                            <input type="text" class="form-control" name="visitorName" placeholder="e.g. Alice Walker" required minlength="2" id="resVisitorName">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Contact Phone</label>
+                            <input type="tel" class="form-control" name="phone" placeholder="e.g. +1 555-0199" required id="resPhone">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Vehicle Number (Optional)</label>
+                            <input type="text" class="form-control" name="vehicleNo" placeholder="e.g. MH12AB1234" id="resVehicleNo">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Purpose of Visit</label>
+                            <input type="text" class="form-control" name="purpose" placeholder="e.g. Family Visit" required id="resPurpose">
+                        </div>
+                    </div>
+                    <div class="mt-3 text-end">
+                        <button type="submit" class="btn btn-primary" id="res-submit-pass-btn">
+                            <i class="bi bi-shield-plus me-1"></i>Generate Pre-Approved Pass
+                        </button>
+                    </div>
+                </form>
             </div>
-        </form>
+
+            <!-- Group Pre-registration -->
+            <div class="tab-pane fade" id="res-group-pane" role="tabpanel">
+                <form th:action="@{/resident/pre-register-group}" method="post" id="resident-create-group-form">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Primary Guest Name</label>
+                            <input type="text" class="form-control" name="primaryVisitorName" placeholder="e.g. Rahul Sharma" required minlength="2">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Contact Phone</label>
+                            <input type="tel" class="form-control" name="phone" placeholder="e.g. +1 555-0143" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label text-warning fw-bold">Total Number of Guests</label>
+                            <input type="number" class="form-control border-warning" name="totalGuests" id="resTotalGuestsInput" value="2" min="1" required oninput="document.getElementById('resAccompanyingGuestsDisplay').value = Math.max(0, parseInt(this.value || 1) - 1);">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label text-info fw-bold">Accompanying Count</label>
+                            <input type="number" class="form-control" id="resAccompanyingGuestsDisplay" value="1" readonly style="background: rgba(15, 23, 42, 0.7); color: #7dd3fc; font-weight: bold;">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Accompanying Guest Names (Optional)</label>
+                            <input type="text" class="form-control" name="accompanyingGuestNames" placeholder="e.g. Priya Sharma, Rohan Sharma">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Purpose</label>
+                            <input type="text" class="form-control" name="purpose" placeholder="e.g. Birthday Celebration" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Vehicle Number (Optional)</label>
+                            <input type="text" class="form-control" name="vehicleNo" placeholder="Optional">
+                        </div>
+                    </div>
+                    <div class="mt-3 text-end">
+                        <button type="submit" class="btn btn-primary" id="res-submit-group-btn">
+                            <i class="bi bi-collection-fill me-1"></i>Pre-Approve Group Arrival
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <!-- GUARD PASS CREATION PANEL -->

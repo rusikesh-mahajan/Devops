@@ -1,7 +1,9 @@
 package com.gatepass.config;
 
+import com.gatepass.entity.GroupVisit;
 import com.gatepass.entity.User;
 import com.gatepass.entity.VisitorPass;
+import com.gatepass.repository.GroupVisitRepository;
 import com.gatepass.repository.UserRepository;
 import com.gatepass.repository.VisitorPassRepository;
 import org.springframework.boot.CommandLineRunner;
@@ -15,13 +17,16 @@ import java.time.LocalDateTime;
 public class DataInitializer {
 
     @Bean
-    public CommandLineRunner initData(UserRepository userRepo, VisitorPassRepository passRepo, PasswordEncoder encoder) {
+    public CommandLineRunner initData(UserRepository userRepo, 
+                                     VisitorPassRepository passRepo, 
+                                     GroupVisitRepository groupRepo,
+                                     PasswordEncoder encoder) {
         return args -> {
             if (userRepo.count() == 0) {
-                User admin = userRepo.save(new User("admin", encoder.encode("admin123"), "ROLE_ADMIN", "System Administrator"));
-                User guard = userRepo.save(new User("guard1", encoder.encode("guard123"), "ROLE_GUARD", "Front Gate Guard"));
-                User resident1 = userRepo.save(new User("resident1", encoder.encode("res123"), "ROLE_RESIDENT", "John Doe (Apt 101)"));
-                User resident2 = userRepo.save(new User("resident2", encoder.encode("res123"), "ROLE_RESIDENT", "Jane Smith (Apt 102)"));
+                User admin = userRepo.save(new User("admin", encoder.encode("admin123"), "ROLE_ADMIN", "System Administrator", "HQ-01", "+1 555-0100"));
+                User guard = userRepo.save(new User("guard1", encoder.encode("guard123"), "ROLE_GUARD", "Front Gate Guard", "GATE-01", "+1 555-0101"));
+                User resident1 = userRepo.save(new User("resident1", encoder.encode("res123"), "ROLE_RESIDENT", "John Doe", "B-204", "+1 555-0204"));
+                User resident2 = userRepo.save(new User("resident2", encoder.encode("res123"), "ROLE_RESIDENT", "Jane Smith", "A-105", "+1 555-0105"));
                 System.out.println("Default users seeded: admin, guard1, resident1, resident2.");
 
                 if (passRepo.count() == 0) {
@@ -69,6 +74,38 @@ public class DataInitializer {
                     passRepo.save(p4);
 
                     System.out.println("Sample visitor passes seeded across all workflow states.");
+                }
+
+                if (groupRepo.count() == 0) {
+                    // Seed Sample Group Visits
+                    GroupVisit g1 = new GroupVisit();
+                    g1.setGroupCode("GV-001");
+                    g1.setPrimaryVisitorName("Rahul Sharma");
+                    g1.setPhone("+1 555-123-0001");
+                    g1.setVehicleNo("MH-12-RS-5050");
+                    g1.setPurpose("Family Gathering & Dinner");
+                    g1.setTotalGuests(5); // 5 Total: Rahul Sharma + 4 Accompanying
+                    g1.setAccompanyingGuestNames("Sunil Sharma, Ananya Sharma, Rohit Verma, Priya Verma");
+                    g1.setHost(resident1);
+                    g1.setFlatNumber("B-204");
+                    g1.setStatus("CHECKED_IN");
+                    g1.setCheckInTime(LocalDateTime.now().minusMinutes(50));
+                    groupRepo.save(g1);
+
+                    GroupVisit g2 = new GroupVisit();
+                    g2.setGroupCode("GV-002");
+                    g2.setPrimaryVisitorName("Priya Patel");
+                    g2.setPhone("+1 555-987-0002");
+                    g2.setVehicleNo("DL-01-PP-1010");
+                    g2.setPurpose("Weekend Family Visit");
+                    g2.setTotalGuests(3); // 3 Total: Priya Patel + 2 Accompanying
+                    g2.setAccompanyingGuestNames("Kiran Patel, Aarav Patel");
+                    g2.setHost(resident2);
+                    g2.setFlatNumber("A-105");
+                    g2.setStatus("APPROVED");
+                    groupRepo.save(g2);
+
+                    System.out.println("Sample group visits seeded: GV-001 (5 guests checked in), GV-002 (3 guests approved).");
                 }
             }
         };

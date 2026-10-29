@@ -21,6 +21,11 @@ public class User {
     @Column(nullable = false)
     private String name;
 
+    @Column(name = "unit_number")
+    private String unitNumber; // Flat/apartment number (e.g., B-204, A-105)
+
+    private String phone;
+
     public User() {}
 
     public User(String username, String password, String role, String name) {
@@ -28,6 +33,15 @@ public class User {
         this.password = password;
         this.role = role;
         this.name = name;
+    }
+
+    public User(String username, String password, String role, String name, String unitNumber, String phone) {
+        this.username = username;
+        this.password = password;
+        this.role = role;
+        this.name = name;
+        this.unitNumber = unitNumber;
+        this.phone = phone;
     }
 
     // Getters and setters
@@ -41,4 +55,8 @@ public class User {
     public void setRole(String role) { this.role = role; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+    public String getUnitNumber() { return unitNumber != null ? unitNumber : "N/A"; }
+    public void setUnitNumber(String unitNumber) { this.unitNumber = unitNumber; }
+    public String getPhone() { return phone != null ? phone : "N/A"; }
+    public void setPhone(String phone) { this.phone = phone; }
 }
