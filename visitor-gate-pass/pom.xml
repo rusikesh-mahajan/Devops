@@ -44,6 +44,7 @@
                 <version>3.2.5</version>
                 <configuration>
                     <testFailureIgnore>false</testFailureIgnore>
+                    <argLine>-javaagent:"C:/Users/ASUS/.m2/repository/net/bytebuddy/byte-buddy-agent/1.14.12/byte-buddy-agent-1.14.12.jar" -XX:+EnableDynamicAgentLoading</argLine>
                 </configuration>
             </plugin>
         </plugins>

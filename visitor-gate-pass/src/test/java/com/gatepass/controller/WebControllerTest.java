@@ -66,7 +66,7 @@ public class WebControllerTest {
     public void testAdminDashboard() throws Exception {
         mockMvc.perform(get("/dashboard"))
                 .andExpect(status().isOk())
-                .andExpect(view().name("dashboard"))
+                .andExpect(view().name("admin-dashboard"))
                 .andExpect(model().attributeExists("role", "totalPasses", "pendingPasses", "checkedInPasses"));
     }
 
