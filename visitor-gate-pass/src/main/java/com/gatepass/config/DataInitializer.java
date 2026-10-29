@@ -107,6 +107,32 @@ public class DataInitializer {
 
                     System.out.println("Sample group visits seeded: GV-001 (5 guests checked in), GV-002 (3 guests approved).");
                 }
+            } else {
+                // Defensive migration for pre-existing database records
+                userRepo.findAll().forEach(u -> {
+                    boolean changed = false;
+                    if (u.getUnitNumber() == null || u.getUnitNumber().isBlank() || "N/A".equalsIgnoreCase(u.getUnitNumber())) {
+                        if ("resident1".equals(u.getUsername())) { u.setUnitNumber("Apt 101"); changed = true; }
+                        else if ("resident2".equals(u.getUsername())) { u.setUnitNumber("Apt 102"); changed = true; }
+                        else if ("admin".equals(u.getUsername())) { u.setUnitNumber("HQ-01"); changed = true; }
+                        else if ("guard1".equals(u.getUsername())) { u.setUnitNumber("GATE-01"); changed = true; }
+                        else if (u.getName() != null && u.getName().contains("(") && u.getName().contains(")")) {
+                            String extracted = u.getName().substring(u.getName().indexOf('(') + 1, u.getName().indexOf(')')).trim();
+                            u.setUnitNumber(extracted);
+                            changed = true;
+                        }
+                    }
+                    if (changed) {
+                        userRepo.save(u);
+                    }
+                });
+
+                groupRepo.findAll().forEach(g -> {
+                    if ((g.getFlatNumber() == null || g.getFlatNumber().isBlank() || "N/A".equalsIgnoreCase(g.getFlatNumber())) && g.getHost() != null) {
+                        g.setFlatNumber(g.getHost().getUnitNumber() != null ? g.getHost().getUnitNumber() : "Apt 101");
+                        groupRepo.save(g);
+                    }
+                });
             }
         };
     }
