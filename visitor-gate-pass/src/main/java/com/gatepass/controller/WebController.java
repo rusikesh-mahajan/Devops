@@ -581,12 +581,17 @@ public class WebController {
         long myInside = passes.stream().filter(p -> "CHECKED_IN".equals(p.getStatus())).count() +
                         groupVisits.stream().filter(g -> "CHECKED_IN".equals(g.getStatus())).count();
 
+        long myCheckedOut = passes.stream().filter(p -> "CHECKED_OUT".equals(p.getStatus())).count() +
+                            groupVisits.stream().filter(g -> "CHECKED_OUT".equals(g.getStatus())).count();
+        long myRejected = passes.stream().filter(p -> "REJECTED".equals(p.getStatus())).count() +
+                          groupVisits.stream().filter(g -> "REJECTED".equals(g.getStatus())).count();
+
         model.addAttribute("totalPasses", myTotal);
         model.addAttribute("pendingPasses", myPending);
         model.addAttribute("approvedPasses", myApproved);
         model.addAttribute("checkedInPasses", myInside);
-        model.addAttribute("checkedOutPasses", passes.stream().filter(p -> "CHECKED_OUT".equals(p.getStatus())).count());
-        model.addAttribute("rejectedPasses", passes.stream().filter(p -> "REJECTED".equals(p.getStatus())).count());
+        model.addAttribute("checkedOutPasses", myCheckedOut);
+        model.addAttribute("rejectedPasses", myRejected);
 
         return "dashboard"; // Renders standard dashboard customized with resident tabs
     }
