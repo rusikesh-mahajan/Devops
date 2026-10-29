@@ -433,6 +433,18 @@
         </div>
     </div>
 
+    <!-- PENDING APPROVAL ALERT BANNER FOR RESIDENT -->
+    <div th:if="${role == 'ROLE_RESIDENT' && pendingPasses > 0}" class="alert alert-warning d-flex align-items-center justify-content-between p-3 mb-4 shadow-sm" style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 14px;">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-bell-fill fs-3 text-warning me-3"></i>
+            <div>
+                <h6 class="mb-0 text-warning fw-bold">Action Required: Visitor Approvals Pending</h6>
+                <span class="small text-light">You have <strong class="text-warning">[[${pendingPasses}]]</strong> visitor arrival(s) awaiting your decision. Approve or reject below to grant gate entry.</span>
+            </div>
+        </div>
+        <a href="#resident-groups-view" class="btn btn-warning btn-sm fw-bold px-3 py-1">Review Group Arrivals</a>
+    </div>
+
     <!-- RESIDENT PRE-REGISTRATION PANEL -->
     <div th:if="${role == 'ROLE_RESIDENT'}" class="glass-panel" id="resident-preregister-view">
         <div class="panel-title">
@@ -522,6 +534,112 @@
                     </div>
                 </form>
             </div>
+        </div>
+    </div>
+
+    <!-- GROUP VISITS PANEL FOR RESIDENT -->
+    <div th:if="${role == 'ROLE_RESIDENT' || role == 'ROLE_ADMIN'}" class="glass-panel" id="resident-groups-view">
+        <div class="panel-title d-flex justify-content-between align-items-center">
+            <span>
+                <i class="bi bi-people-fill me-2 text-warning"></i>Group Visitor Arrivals & Delegations
+                <span class="badge bg-warning text-dark ms-2" th:if="${groupVisits != null && !groupVisits.isEmpty() && groupVisits.?[status == 'PENDING'].size() > 0}" 
+                      th:text="${groupVisits.?[status == 'PENDING'].size() + ' Awaiting Approval'}">1 Awaiting Approval</span>
+            </span>
+            <span class="fs-6 text-muted" th:text="${groupVisits != null ? groupVisits.size() + ' group(s) registered' : '0 groups'}"></span>
+        </div>
+
+        <div class="table-responsive" th:if="${groupVisits != null and !groupVisits.isEmpty()}">
+            <table class="table" id="group-records-table">
+                <thead>
+                    <tr>
+                        <th>Group ID</th>
+                        <th>Primary Visitor</th>
+                        <th>Contact / Vehicle</th>
+                        <th>Guest Count</th>
+                        <th>Accompanying Guests</th>
+                        <th>Purpose / Schedule</th>
+                        <th>Status</th>
+                        <th>Resident Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="group : ${groupVisits}" th:id="${'group-row-' + group.id}">
+                        <td>
+                            <span class="pass-code-pill" th:text="${group.groupCode}">GV-001</span>
+                        </td>
+                        <td>
+                            <div class="fw-bold text-light" th:text="${group.primaryVisitorName}">Primary Visitor</div>
+                            <div class="small text-info fw-semibold" th:text="${group.flatNumber != null && !group.flatNumber.equals('N/A') ? 'Flat ' + group.flatNumber : (group.host != null && group.host.unitNumber != null && !group.host.unitNumber.equals('N/A') ? 'Flat ' + group.host.unitNumber : 'My Flat')}">Flat B-204</div>
+                        </td>
+                        <td>
+                            <div><i class="bi bi-telephone-fill small text-muted me-1"></i><span th:text="${group.phone}">123456</span></div>
+                            <div class="small text-muted" th:if="${group.vehicleNo != null and !group.vehicleNo.isEmpty()}">
+                                <i class="bi bi-car-front-fill me-1"></i><span th:text="${group.vehicleNo}">MH12-3456</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary fs-6 px-2 py-1" th:text="${group.totalGuests + ' Total'}">3 Total</span>
+                            <div class="small text-info mt-1 fw-bold" th:text="${group.accompanyingGuests + ' Accompanying'}">2 Accompanying</div>
+                        </td>
+                        <td>
+                            <div class="small text-light" th:text="${(group.accompanyingGuestNames != null and !group.accompanyingGuestNames.isBlank()) ? group.accompanyingGuestNames : 'None listed'}">Names</div>
+                        </td>
+                        <td class="small text-muted">
+                            <div class="fw-semibold text-light mb-1" th:text="${group.purpose}">Purpose</div>
+                            <div th:if="${group.createdAt != null}">Created: <span th:text="${#temporals.format(group.createdAt, 'dd MMM HH:mm')}">Date</span></div>
+                            <div th:if="${group.expectedArrivalTime != null}" class="text-warning">Exp: <span th:text="${#temporals.format(group.expectedArrivalTime, 'dd MMM HH:mm')}">Time</span></div>
+                            <div th:if="${group.checkInTime != null}" class="text-info">In: <span th:text="${#temporals.format(group.checkInTime, 'dd MMM HH:mm')}">Time</span></div>
+                            <div th:if="${group.checkOutTime != null}" class="text-secondary">Out: <span th:text="${#temporals.format(group.checkOutTime, 'dd MMM HH:mm')}">Time</span></div>
+                        </td>
+                        <td>
+                            <span class="badge" 
+                                  th:classappend="${group.status == 'PENDING' ? 'bg-warning text-dark' : (group.status == 'APPROVED' ? 'bg-info' : (group.status == 'CHECKED_IN' ? 'bg-success' : (group.status == 'REJECTED' ? 'bg-danger' : 'bg-secondary')))}"
+                                  th:text="${group.status}" th:id="${'group-status-badge-' + group.id}">STATUS</span>
+                        </td>
+                        <td>
+                            <!-- Resident Approval Actions for Group -->
+                            <div th:if="${role == 'ROLE_RESIDENT' && group.status == 'PENDING'}" class="d-inline">
+                                <form th:action="@{/resident/group-status/{id}(id=${group.id})}" method="post" class="d-inline">
+                                    <input type="hidden" name="status" value="APPROVED">
+                                    <button type="submit" class="btn-action approve" title="Approve Group Visit" id="approve-group-btn">
+                                        <i class="bi bi-check-lg"></i> Approve
+                                    </button>
+                                </form>
+                                <form th:action="@{/resident/group-status/{id}(id=${group.id})}" method="post" class="d-inline">
+                                    <input type="hidden" name="status" value="REJECTED">
+                                    <button type="submit" class="btn-action reject" title="Reject Group Visit" id="reject-group-btn">
+                                        <i class="bi bi-x-lg"></i> Reject
+                                    </button>
+                                </form>
+                            </div>
+
+                            <span th:if="${group.status == 'APPROVED'}" class="badge bg-info small">
+                                <i class="bi bi-hourglass-split me-1"></i>Approved (Gate Ready)
+                            </span>
+                            <span th:if="${group.status == 'CHECKED_IN'}" class="badge bg-success small">
+                                <i class="bi bi-building-check me-1"></i>Inside Premises
+                            </span>
+                            <span th:if="${group.status == 'CHECKED_OUT'}" class="badge bg-secondary small">
+                                Checked Out
+                            </span>
+                            <span th:if="${group.status == 'REJECTED'}" class="badge bg-danger small">
+                                Rejected
+                            </span>
+
+                            <!-- Details Modal Trigger -->
+                            <button type="button" class="btn-action details ms-1" 
+                                    th:attr="data-id=${group.id}" 
+                                    onclick="showGroupModal(this.getAttribute('data-id'))" title="View Full Group Details">
+                                <i class="bi bi-eye"></i> Details
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div th:if="${groupVisits == null or groupVisits.isEmpty()}" class="empty-state py-4">
+            <i class="bi bi-people fs-2 d-block mb-2 text-muted"></i>
+            <p class="mb-0 text-muted">No group arrivals recorded for your residence.</p>
         </div>
     </div>
 
@@ -755,6 +873,22 @@
     </div>
 </div>
 
+<!-- GROUP DETAILS MODAL -->
+<div class="modal fade" id="groupDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: #1e293b; border-radius: 16px; color: #f8fafc;">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title"><i class="bi bi-collection-fill me-2 text-info"></i>Group Visit Audit Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="groupDetailsBody">Loading...</div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- EDIT PASS MODAL -->
 <div class="modal fade" id="editPassModal" tabindex="-1" aria-labelledby="editPassModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -833,6 +967,34 @@
         document.getElementById('editVehicle').value = btn.getAttribute('data-vehicle') || '';
         document.getElementById('editPurpose').value = btn.getAttribute('data-purpose');
         new bootstrap.Modal(document.getElementById('editPassModal')).show();
+    }
+
+    function showGroupModal(id) {
+        var modal = new bootstrap.Modal(document.getElementById('groupDetailsModal'));
+        document.getElementById('groupDetailsBody').innerHTML = '<div class="text-center py-4"><div class="spinner-border text-info"></div></div>';
+        modal.show();
+
+        fetch('/api/group-visits/' + id)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('groupDetailsBody').innerHTML = `
+                    <div class="mb-3"><strong>Group ID:</strong> <span class="pass-code-pill">${data.groupCode}</span></div>
+                    <div class="mb-2"><strong>Primary Visitor:</strong> ${data.primaryVisitorName}</div>
+                    <div class="mb-2"><strong>Contact Phone:</strong> ${data.phone}</div>
+                    <div class="mb-2"><strong>Residence:</strong> ${data.hostName} (Flat: ${data.flatNumber})</div>
+                    <div class="mb-2"><strong>Total Guests:</strong> <span class="badge bg-primary fs-6">${data.totalGuests}</span> (1 Primary + ${data.accompanyingGuests} Accompanying)</div>
+                    <div class="mb-2"><strong>Accompanying Guest Names:</strong> <p class="text-light bg-dark p-2 rounded mt-1">${data.accompanyingGuestNames || 'None listed'}</p></div>
+                    <div class="mb-2"><strong>Purpose:</strong> ${data.purpose}</div>
+                    <div class="mb-2"><strong>Vehicle No:</strong> ${data.vehicleNo || 'N/A'}</div>
+                    <div class="mb-2"><strong>Status:</strong> <span class="badge ${data.status === 'PENDING' ? 'bg-warning text-dark' : (data.status === 'APPROVED' ? 'bg-info' : (data.status === 'CHECKED_IN' ? 'bg-success' : 'bg-secondary'))}">${data.status}</span></div>
+                    <div class="mb-2"><strong>Expected Arrival:</strong> ${data.expectedArrivalTime || '-'}</div>
+                    <div class="mb-2"><strong>Check-In Time:</strong> ${data.checkInTime || '-'}</div>
+                    <div class="mb-2"><strong>Check-Out Time:</strong> ${data.checkOutTime || '-'}</div>
+                `;
+            })
+            .catch(err => {
+                document.getElementById('groupDetailsBody').innerHTML = '<div class="alert alert-danger">Error fetching details.</div>';
+            });
     }
 </script>
 
